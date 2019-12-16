@@ -9,5 +9,8 @@ ccflags-y += -DREAD_WRITE_DEBUG_ENABLED=1
 
 # Modules
 obj-m += leicaefi-core.o
+obj-m += leicaefi-chr.o
 
 leicaefi-core-y := src/leicaefi-core.o
+
+leicaefi-chr-y := src/leicaefi-chr.o

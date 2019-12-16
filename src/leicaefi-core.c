@@ -88,20 +88,26 @@ static int leicaefi_regmap_reg_write(void *context, unsigned int reg,
 static struct resource leicaefi_keys_resources[] = {
 	DEFINE_RES_IRQ_NAMED(LEICAEFI_IRQNO_KEY, "LEICAEFI_KEY"),
 };
+#endif
 
 static struct mfd_cell leicefi_mfd_cells[] = {
 	{
-		.name = "leicaefi-leds",
+		.name = "leica-efi-chr",
+		.of_compatible = "leica,efi-chr",
+	},
+#if 0 /* MFD child devices, to be enabled by next user stories */
+	{
+		.name = "leica-efi-leds",
 		.of_compatible = "leica,efi-leds",
 	},
 	{
-		.name = "leicaefi-keys",
+		.name = "leica-efi-keys",
 		.of_compatible = "leica,efi-keys",
 		.resources = leicaefi_keys_resources,
 		.num_resources = ARRAY_SIZE(leicaefi_keys_resources),
 	},
-};
 #endif
+};
 
 static bool leicaefi_is_volatile_reg(struct device *dev, unsigned int reg)
 {
@@ -242,6 +248,8 @@ static int leicaefi_print_info(struct leicaefi_device *efidev)
 
 	ret = leicaefi_read(efidev->regmap, LEICAEFI_REG_MOD_FWV, &value);
 	if (ret != 0) {
+		dev_err(&efidev->i2c->dev,
+			"Failed to read firmware version; error %d\n", ret);
 		return ret;
 	}
 
@@ -249,6 +257,8 @@ static int leicaefi_print_info(struct leicaefi_device *efidev)
 
 	ret = leicaefi_read(efidev->regmap, LEICAEFI_REG_MOD_LDRV, &value);
 	if (ret != 0) {
+		dev_err(&efidev->i2c->dev,
+			"Failed to read loader version; error %d\n", ret);
 		return ret;
 	}
 
@@ -256,6 +266,8 @@ static int leicaefi_print_info(struct leicaefi_device *efidev)
 
 	ret = leicaefi_read(efidev->regmap, LEICAEFI_REG_MOD_HW, &value);
 	if (ret != 0) {
+		dev_err(&efidev->i2c->dev,
+			"Failed to read hardware info; error %d\n", ret);
 		return ret;
 	}
 
@@ -322,9 +334,9 @@ static int leicaefi_i2c_probe(struct i2c_client *i2c)
 		leicaefi_read(efidev->regmap, LEICAEFI_REG_MOD_IFG, &val);
 	}
 
-#if 0 /* MFD child devices, to be enabled by next user stories */
 	ret = devm_mfd_add_devices(&efidev->i2c->dev, PLATFORM_DEVID_NONE,
-				   leicefi_mfd_cells, ARRAY_SIZE(leicefi_mfd_cells),
+				   leicefi_mfd_cells,
+				   ARRAY_SIZE(leicefi_mfd_cells),
 				   NULL, /* mem_base */
 				   0, /* irq_base */
 				   regmap_irq_get_domain(efidev->regmap_irq));
@@ -333,7 +345,6 @@ static int leicaefi_i2c_probe(struct i2c_client *i2c)
 			ret);
 		return ret;
 	}
-#endif
 
 	ret = leicaefi_print_info(efidev);
 	if (ret != 0) {
