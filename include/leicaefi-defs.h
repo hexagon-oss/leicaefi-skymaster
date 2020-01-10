@@ -56,12 +56,12 @@
 #define LEICAEFI_REG_IFLASH_DATA ((__u8)0x3F)
 
 // I2C/SMBUS interface bits
-#define LEICAEFI_REGNO_MASK ((__u8)0x3F)      // bits 0-5
-#define LEICAEFI_SCBIT_MASK ((__u8)(1 << 6))  // bit 6
+#define LEICAEFI_REGNO_MASK ((__u8)0x3F) // bits 0-5
+#define LEICAEFI_SCBIT_MASK ((__u8)(1 << 6)) // bit 6
 #define LEICAEFI_SCBIT_SET ((__u8)(1 << 6))
 #define LEICAEFI_SCBIT_CLEAR ((__u8)(0 << 6))
 #define LEICAEFI_SCBIT_UNUSED ((__u8)(0 << 6))
-#define LEICAEFI_RWBIT_MASK ((__u8)(1 << 7))  // bit 7
+#define LEICAEFI_RWBIT_MASK ((__u8)(1 << 7)) // bit 7
 #define LEICAEFI_RWBIT_READ ((__u8)(1 << 7))
 #define LEICAEFI_RWBIT_WRITE ((__u8)(0 << 7))
 
@@ -78,6 +78,18 @@
 #define LEICAEFI_IRQBIT_OW (1 << 11)
 #define LEICAEFI_IRQBIT_COM (1 << 12)
 #define LEICAEFI_IRQBIT_LED (1 << 13)
+
+// ERR bits
+#define LEICAEFI_ERRBIT_IA (1 << 0)
+#define LEICAEFI_ERRBIT_FLASH (1 << 1)
+#define LEICAEFI_ERRBIT_KEY (1 << 4)
+#define LEICAEFI_ERRBIT_GCE (1 << 5)
+#define LEICAEFI_ERRBIT_PWR (1 << 8)
+#define LEICAEFI_ERRBIT_DEV (1 << 9)
+#define LEICAEFI_ERRBIT_SMB (1 << 10)
+#define LEICAEFI_ERRBIT_OW (1 << 11)
+#define LEICAEFI_ERRBIT_COM (1 << 12)
+#define LEICAEFI_ERRBIT_HMI (1 << 13)
 
 // MOD_ID platform info
 #define LEICAEFI_PLATFORM_SHIFT (12)

@@ -19,7 +19,7 @@ struct leicaefi_ioctl_regrw {
 };
 
 #define LEICAEFI_IOCTL_READ                                                    \
-	_IOC(_IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 1,                              \
+	_IOC(_IOC_READ | _IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 1,                  \
 	     sizeof(struct leicaefi_ioctl_regrw))
 #define LEICAEFI_IOCTL_WRITE                                                   \
 	_IOC(_IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 2,                              \
@@ -31,7 +31,7 @@ struct leicaefi_ioctl_regrw {
 	_IOC(_IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 4,                              \
 	     sizeof(struct leicaefi_ioctl_regrw))
 #define LEICAEFI_IOCTL_WRITE_RAW                                               \
-    _IOC(_IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 5,                              \
-         sizeof(struct leicaefi_ioctl_regrw))
+	_IOC(_IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 5,                              \
+	     sizeof(struct leicaefi_ioctl_regrw))
 
 #endif /*_LINUX_LEICAEFI_H*/
