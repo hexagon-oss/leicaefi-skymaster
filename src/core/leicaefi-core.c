@@ -52,6 +52,7 @@ static const struct mfd_cell leicaefi_mfd_cells[] = {
 
 static int leicaefi_i2c_hwcheck(struct i2c_client *i2c)
 {
+	u8 mode;
 	u16 platform;
 	u16 project;
 	u16 processor;
@@ -64,8 +65,14 @@ static int leicaefi_i2c_hwcheck(struct i2c_client *i2c)
 		return mod_id;
 	}
 
-	platform = (mod_id >> LEICAEFI_PLATFORM_SHIFT) & LEICAEFI_PLATFORM_MASK;
-	if (platform == LEICAEFI_PLATFORM_SYSTEM1500) {
+	mode = (mod_id >> LEICAEFI_MODID_MODE_SHIFT) & LEICAEFI_MODID_MODE_MASK;
+	dev_info(&i2c->dev, "Current software mode: %s\n",
+		 (mode == LEICAEFI_MODID_MODE_FIRMWARE) ? "Firmware" :
+							  "Loader");
+
+	platform = (mod_id >> LEICAEFI_MODID_PLATFORM_SHIFT) &
+		   LEICAEFI_MODID_PLATFORM_MASK;
+	if (platform == LEICAEFI_MODID_PLATFORM_SYSTEM1500) {
 		dev_info(&i2c->dev, "Detected platform: System1500\n");
 	} else {
 		dev_info(&i2c->dev, "Unsupported platform: %d\n",
@@ -73,17 +80,18 @@ static int leicaefi_i2c_hwcheck(struct i2c_client *i2c)
 		return -EINVAL;
 	}
 
-	project = (mod_id >> LEICAEFI_PROJECT_SHIFT) & LEICAEFI_PROJECT_MASK;
-	if (project == LEICAEFI_PROJECT_SKYMASTER) {
+	project = (mod_id >> LEICAEFI_MODID_PROJECT_SHIFT) &
+		  LEICAEFI_MODID_PROJECT_MASK;
+	if (project == LEICAEFI_MODID_PROJECT_SKYMASTER) {
 		dev_info(&i2c->dev, "Detected project: Skymaster\n");
 	} else {
 		dev_info(&i2c->dev, "Unsupported project: %d\n", (int)project);
 		return -EINVAL;
 	}
 
-	processor =
-		(mod_id >> LEICAEFI_PROCESSOR_SHIFT) & LEICAEFI_PROCESSOR_MASK;
-	if (processor == LEICAEFI_PROCESSOR_EFI) {
+	processor = (mod_id >> LEICAEFI_MODID_PROCESSOR_SHIFT) &
+		    LEICAEFI_MODID_PROCESSOR_MASK;
+	if (processor == LEICAEFI_MODID_PROCESSOR_EFI) {
 		dev_info(&i2c->dev, "Detected processor: EFI\n");
 	} else {
 		dev_info(&i2c->dev, "Unsupported processor: %d\n",
@@ -165,7 +173,7 @@ static int leicaefi_add_mfd_devices(struct leicaefi_device *efidev)
 	int ret = 0;
 	struct irq_domain *irq_domain =
 		leicaefi_irq_get_domain(efidev->irq_chip);
-	int cells_count = ARRAY_SIZE(leicaefi_mfd_cells);
+	const int cells_count = ARRAY_SIZE(leicaefi_mfd_cells);
 	struct mfd_cell *cells = NULL;
 	struct leicaefi_platform_data pdata;
 

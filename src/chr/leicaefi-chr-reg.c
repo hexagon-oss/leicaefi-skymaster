@@ -2,35 +2,32 @@
 #include <linux/platform_device.h>
 
 #include <chr/leicaefi-chr.h>
+#include <chr/leicaefi-chr-utils.h>
 #include <leicaefi.h>
 #include <common/leicaefi-chip.h>
 
 static long leicaefi_chr_ioctl_read(struct leicaefi_chr_device *efidev,
 				    unsigned long arg)
 {
-	struct leicaefi_ioctl_regrw __user *user_data = (void __user *)arg;
-	struct leicaefi_ioctl_regrw kernel_data;
+	struct leicaefi_ioctl_regrw data;
+	int rc = 0;
 
-	if ((arg == 0) || (copy_from_user(&kernel_data, user_data,
-					  sizeof(kernel_data)) != 0)) {
-		dev_warn(&efidev->pdev->dev,
-			 "%s - Cannot copy data from user space\n", __func__);
-		return -EACCES;
+	rc = leicaefi_chr_copy_from_user(&data, arg, sizeof(data));
+	if (rc) {
+		return rc;
 	}
 
-	if (leicaefi_chip_read(efidev->efichip, kernel_data.reg_no,
-			       &kernel_data.reg_value) != 0) {
+	if (leicaefi_chip_read(efidev->efichip, data.reg_no, &data.reg_value) !=
+	    0) {
 		dev_warn(&efidev->pdev->dev,
 			 "%s - I/O operation failed (regno: %d)\n", __func__,
-			 (int)kernel_data.reg_no);
+			 (int)data.reg_no);
 		return -EIO;
 	}
 
-	if ((arg == 0) ||
-	    (copy_to_user(user_data, &kernel_data, sizeof(kernel_data)) != 0)) {
-		dev_warn(&efidev->pdev->dev,
-			 "%s - Cannot copy data to user space\n", __func__);
-		return -EACCES;
+	rc = leicaefi_chr_copy_to_user(arg, &data, sizeof(data));
+	if (rc) {
+		return rc;
 	}
 
 	return 0;
@@ -39,22 +36,19 @@ static long leicaefi_chr_ioctl_read(struct leicaefi_chr_device *efidev,
 static long leicaefi_chr_ioctl_write(struct leicaefi_chr_device *efidev,
 				     unsigned long arg)
 {
-	struct leicaefi_ioctl_regrw __user *user_data = (void __user *)arg;
-	struct leicaefi_ioctl_regrw kernel_data;
+	struct leicaefi_ioctl_regrw data;
+	int rc = 0;
 
-	if ((arg == 0) || (copy_from_user(&kernel_data, user_data,
-					  sizeof(kernel_data)) != 0)) {
-		dev_warn(&efidev->pdev->dev,
-			 "%s - Cannot copy data from user space\n", __func__);
-		return -EACCES;
+	rc = leicaefi_chr_copy_from_user(&data, arg, sizeof(data));
+	if (rc) {
+		return rc;
 	}
 
-	if (leicaefi_chip_write(efidev->efichip, kernel_data.reg_no,
-				kernel_data.reg_value) != 0) {
+	if (leicaefi_chip_write(efidev->efichip, data.reg_no, data.reg_value) !=
+	    0) {
 		dev_warn(&efidev->pdev->dev,
 			 "%s - I/O operation failed (regno: %d, value: %d)\n",
-			 __func__, (int)kernel_data.reg_no,
-			 (int)kernel_data.reg_value);
+			 __func__, (int)data.reg_no, (int)data.reg_value);
 		return -EIO;
 	}
 
@@ -64,38 +58,34 @@ static long leicaefi_chr_ioctl_write(struct leicaefi_chr_device *efidev,
 static long leicaefi_chr_ioctl_write_raw(struct leicaefi_chr_device *efidev,
 					 unsigned long arg)
 {
-	struct leicaefi_ioctl_regrw __user *user_data = (void __user *)arg;
-	struct leicaefi_ioctl_regrw kernel_data;
+	struct leicaefi_ioctl_regrw data;
+	int rc = 0;
 
-	if ((arg == 0) || (copy_from_user(&kernel_data, user_data,
-					  sizeof(kernel_data)) != 0)) {
-		dev_warn(&efidev->pdev->dev,
-			 "%s - Cannot copy data from user space\n", __func__);
-		return -EACCES;
+	rc = leicaefi_chr_copy_from_user(&data, arg, sizeof(data));
+	if (rc) {
+		return rc;
 	}
 
-	if (kernel_data.reg_no & LEICAEFI_SCBIT_SET) {
+	if (data.reg_no & LEICAEFI_SCBIT_SET) {
 		if (leicaefi_chip_set_bits(efidev->efichip,
-					   kernel_data.reg_no &
-						   LEICAEFI_REGNO_MASK,
-					   kernel_data.reg_value) != 0) {
+					   data.reg_no & LEICAEFI_REGNO_MASK,
+					   data.reg_value) != 0) {
 			dev_warn(
 				&efidev->pdev->dev,
 				"%s - I/O operation failed (regno: %d, value: %d)\n",
-				__func__, (int)kernel_data.reg_no,
-				(int)kernel_data.reg_value);
+				__func__, (int)data.reg_no,
+				(int)data.reg_value);
 			return -EIO;
 		}
 	} else {
 		if (leicaefi_chip_clear_bits(efidev->efichip,
-					     kernel_data.reg_no &
-						     LEICAEFI_REGNO_MASK,
-					     kernel_data.reg_value) != 0) {
+					     data.reg_no & LEICAEFI_REGNO_MASK,
+					     data.reg_value) != 0) {
 			dev_warn(
 				&efidev->pdev->dev,
 				"%s - I/O operation failed (regno: %d, value: %d)\n",
-				__func__, (int)kernel_data.reg_no,
-				(int)kernel_data.reg_value);
+				__func__, (int)data.reg_no,
+				(int)data.reg_value);
 			return -EIO;
 		}
 	}
@@ -106,22 +96,19 @@ static long leicaefi_chr_ioctl_write_raw(struct leicaefi_chr_device *efidev,
 static long leicaefi_chr_ioctl_bits_set(struct leicaefi_chr_device *efidev,
 					unsigned long arg)
 {
-	struct leicaefi_ioctl_regrw __user *user_data = (void __user *)arg;
-	struct leicaefi_ioctl_regrw kernel_data;
+	struct leicaefi_ioctl_regrw data;
+	int rc = 0;
 
-	if ((arg == 0) || (copy_from_user(&kernel_data, user_data,
-					  sizeof(kernel_data)) != 0)) {
-		dev_warn(&efidev->pdev->dev,
-			 "%s - Cannot copy data from user space\n", __func__);
-		return -EACCES;
+	rc = leicaefi_chr_copy_from_user(&data, arg, sizeof(data));
+	if (rc) {
+		return rc;
 	}
 
-	if (leicaefi_chip_set_bits(efidev->efichip, kernel_data.reg_no,
-				   kernel_data.reg_value) != 0) {
+	if (leicaefi_chip_set_bits(efidev->efichip, data.reg_no,
+				   data.reg_value) != 0) {
 		dev_warn(&efidev->pdev->dev,
 			 "%s - I/O operation failed (regno: %d, value: %d)\n",
-			 __func__, (int)kernel_data.reg_no,
-			 (int)kernel_data.reg_value);
+			 __func__, (int)data.reg_no, (int)data.reg_value);
 		return -EIO;
 	}
 
@@ -131,22 +118,19 @@ static long leicaefi_chr_ioctl_bits_set(struct leicaefi_chr_device *efidev,
 static long leicaefi_chr_ioctl_bits_clear(struct leicaefi_chr_device *efidev,
 					  unsigned long arg)
 {
-	struct leicaefi_ioctl_regrw __user *user_data = (void __user *)arg;
-	struct leicaefi_ioctl_regrw kernel_data;
+	struct leicaefi_ioctl_regrw data;
+	int rc = 0;
 
-	if ((arg == 0) || (copy_from_user(&kernel_data, user_data,
-					  sizeof(kernel_data)) != 0)) {
-		dev_warn(&efidev->pdev->dev,
-			 "%s - Cannot copy data from user space\n", __func__);
-		return -EACCES;
+	rc = leicaefi_chr_copy_from_user(&data, arg, sizeof(data));
+	if (rc) {
+		return rc;
 	}
 
-	if (leicaefi_chip_clear_bits(efidev->efichip, kernel_data.reg_no,
-				     kernel_data.reg_value) != 0) {
+	if (leicaefi_chip_clear_bits(efidev->efichip, data.reg_no,
+				     data.reg_value) != 0) {
 		dev_warn(&efidev->pdev->dev,
 			 "%s - I/O operation failed (regno: %d, value: %d)\n",
-			 __func__, (int)kernel_data.reg_no,
-			 (int)kernel_data.reg_value);
+			 __func__, (int)data.reg_no, (int)data.reg_value);
 		return -EIO;
 	}
 

@@ -9,9 +9,10 @@ ccflags-y += -DDEBUG=1
 obj-m += leicaefi-core.o
 obj-m += leicaefi-chr.o
 
-leicaefi-core-y := src/leicaefi-core.o
+leicaefi-core-y := src/core/leicaefi-core.o
 leicaefi-core-y += src/core/leicaefi-chip.o
 leicaefi-core-y += src/core/leicaefi-irq.o
 
 leicaefi-chr-y := src/chr/leicaefi-chr.o
 leicaefi-chr-y += src/chr/leicaefi-chr-reg.o
+leicaefi-chr-y += src/chr/leicaefi-chr-flash.o

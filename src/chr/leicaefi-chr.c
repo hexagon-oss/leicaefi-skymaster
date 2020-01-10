@@ -46,7 +46,7 @@ static ssize_t leicaefi_chr_write(struct file *filep, const char __user *buffer,
 {
 	struct leicaefi_chr_device *efidev = filep->private_data;
 	dev_dbg(&efidev->pdev->dev, "%s\n", __func__);
-	return -EINVAL;
+	return -EPERM;
 }
 
 static long leicaefi_chr_unlocked_ioctl(struct file *filep, unsigned int cmd,
@@ -56,27 +56,27 @@ static long leicaefi_chr_unlocked_ioctl(struct file *filep, unsigned int cmd,
 	long result = 0;
 	bool handled = false;
 
-	dev_dbg(&efidev->pdev->dev, "%s\n", __func__);
-
 	result = leicaefi_chr_reg_handle_ioctl(efidev, cmd, arg, &handled);
 	if (handled) {
 		return result;
 	}
 
-#if 0 /* to be delivered with flash support */
 	result = leicaefi_chr_flash_handle_ioctl(efidev, cmd, arg, &handled);
 	if (handled) {
 		return result;
 	}
-#endif
+
+	dev_warn(&efidev->pdev->dev, "%s - IOCTL call %u not handled", __func__,
+		 cmd);
 
 	return -EINVAL;
 }
 
 static int leicaefi_chr_create_device(struct leicaefi_chr_device *efidev)
 {
-	int error = 0;
+	int rc = 0;
 	int major = 0;
+	struct device *new_dev = NULL;
 
 	dev_dbg(&efidev->pdev->dev, "%s\n", __func__);
 
@@ -91,10 +91,10 @@ static int leicaefi_chr_create_device(struct leicaefi_chr_device *efidev)
 	// as they are assigned the same minor number leading to an issue in device_create
 	//
 	// to be done when we will need more than 1 instance of device
-	error = alloc_chrdev_region(&efidev->chr_dev, 0, 1, "leicaefi");
-	if (error < 0) {
+	rc = alloc_chrdev_region(&efidev->chr_dev, 0, 1, "leicaefi");
+	if (rc) {
 		dev_err(&efidev->pdev->dev, "Major number allocation failed\n");
-		return error;
+		return rc;
 	}
 	efidev->chr_region_allocated = true;
 
@@ -103,18 +103,19 @@ static int leicaefi_chr_create_device(struct leicaefi_chr_device *efidev)
 
 	cdev_init(&efidev->chr_cdev, &efidev->chr_file_ops);
 
-	error = cdev_add(&efidev->chr_cdev, efidev->chr_dev, 1);
-	if (error < 0) {
+	rc = cdev_add(&efidev->chr_cdev, efidev->chr_dev, 1);
+	if (rc < 0) {
 		dev_err(&efidev->pdev->dev, "Failed to add cdev\n");
-		return error;
+		return rc;
 	}
 	efidev->chr_cdev_added = true;
 
-	if (!device_create(leicaefi_chr_class, &efidev->pdev->dev,
-			   efidev->chr_dev, NULL, "leicaefi%d",
-			   MINOR(efidev->chr_dev))) {
+	new_dev = device_create(leicaefi_chr_class, &efidev->pdev->dev,
+				efidev->chr_dev, NULL, "leicaefi%d",
+				MINOR(efidev->chr_dev));
+	if (IS_ERR(new_dev)) {
 		dev_err(&efidev->pdev->dev, "Failed to create device\n");
-		return -EINVAL;
+		return PTR_ERR(new_dev);
 	}
 	efidev->chr_device_created = true;
 
@@ -170,14 +171,12 @@ static int leicaefi_chr_probe(struct platform_device *pdev)
 		return -ENODEV;
 	}
 
-#if 0 /* to be delivered with flash support */
 	rc = leicaefi_chr_flash_init(efidev);
-	if (!rc) {
+	if (rc != 0) {
 		dev_err(&efidev->pdev->dev,
 			"Flash component initialization failed.\n");
 		return rc;
 	}
-#endif
 
 	rc = leicaefi_chr_create_device(efidev);
 	if (rc != 0) {

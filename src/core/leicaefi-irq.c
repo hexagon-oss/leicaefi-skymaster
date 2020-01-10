@@ -88,8 +88,8 @@ static void leicaefi_irq_chip_sync_unlock(struct irq_data *data)
 		(unsigned int)ie_enable_mask, (unsigned int)ie_disable_mask);
 
 	if (ie_disable_mask) {
-		rc = leicaefi_chip_set_bits(chip->efichip, LEICAEFI_REG_MOD_IE,
-					    ie_disable_mask);
+		rc = leicaefi_chip_clear_bits(
+			chip->efichip, LEICAEFI_REG_MOD_IE, ie_disable_mask);
 		if (rc != 0) {
 			dev_err(chip->dev, "%s - disabling interrupts failed\n",
 				__func__);
@@ -144,6 +144,9 @@ static int leicaefi_irq_set_type(struct irq_data *data, unsigned int type)
 
 	dev_dbg(chip->dev, "%s\n", __func__);
 
+	// this function is required by kernel API but we do not handle other types
+	// (normally it is not called)
+
 	if (type != IRQ_TYPE_LEVEL_HIGH) {
 		return -EINVAL;
 	}
@@ -176,18 +179,20 @@ static struct irq_chip leicaefi_irq_chip = {
 	.irq_set_wake = leicaefi_irq_set_wake,
 };
 
-static int leicaefi_irq_domain_map(struct irq_domain *h, unsigned int virq,
-				   irq_hw_number_t hw)
+static int leicaefi_irq_domain_map(struct irq_domain *domain,
+				   unsigned int virt_irq_num,
+				   irq_hw_number_t hw_irq_num)
 {
-	struct leicaefi_irq_chip *chip = h->host_data;
+	struct leicaefi_irq_chip *chip = domain->host_data;
 
-	dev_dbg(chip->dev, "%s virq=%u hw=%lu\n", __func__, virq, hw);
+	dev_dbg(chip->dev, "%s virq=%u hw=%lu\n", __func__, virt_irq_num,
+		hw_irq_num);
 
-	irq_set_chip_data(virq, chip);
-	irq_set_chip(virq, &leicaefi_irq_chip);
-	irq_set_nested_thread(virq, 1);
-	irq_set_parent(virq, chip->irq);
-	irq_set_noprobe(virq);
+	irq_set_chip_data(virt_irq_num, chip);
+	irq_set_chip(virt_irq_num, &leicaefi_irq_chip);
+	irq_set_nested_thread(virt_irq_num, 1);
+	irq_set_parent(virt_irq_num, chip->irq);
+	irq_set_noprobe(virt_irq_num);
 
 	return 0;
 }
@@ -197,9 +202,9 @@ static const struct irq_domain_ops leicaefi_irq_domain_ops = {
 	.xlate = irq_domain_xlate_onetwocell,
 };
 
-static irqreturn_t leicaefi_irq_thread(int irq, void *d)
+static irqreturn_t leicaefi_irq_thread(int irq, void *cookie)
 {
-	struct leicaefi_irq_chip *chip = d;
+	struct leicaefi_irq_chip *chip = cookie;
 	u16 ifg_value = 0;
 	u16 err_value = 0;
 	int rc = 0;
@@ -251,7 +256,7 @@ static irqreturn_t leicaefi_irq_thread(int irq, void *d)
 
 static int leicaefi_irq_chip_init(struct leicaefi_irq_chip *chip)
 {
-	int rc;
+	int rc = 0;
 
 	dev_dbg(chip->dev, "%s\n", __func__);
 
@@ -284,7 +289,8 @@ static int leicaefi_irq_chip_init(struct leicaefi_irq_chip *chip)
 		rc = leicaefi_chip_clear_bits(chip->efichip,
 					      LEICAEFI_REG_MOD_IE, 0xFFFF);
 		if (rc != 0) {
-			dev_err(chip->dev, "%s - IRQ setup failed: %d\n",
+			dev_err(chip->dev,
+				"%s - failed to clear enabled interrupts mask: %d\n",
 				__func__, rc);
 			return rc;
 		}
@@ -293,14 +299,16 @@ static int leicaefi_irq_chip_init(struct leicaefi_irq_chip *chip)
 		rc = leicaefi_chip_read(chip->efichip, LEICAEFI_REG_MOD_IFG,
 					&value);
 		if (rc != 0) {
-			dev_err(chip->dev, "%s - IRQ setup failed: %d\n",
+			dev_err(chip->dev,
+				"%s - failed to clear IFG register: %d\n",
 				__func__, rc);
 			return rc;
 		}
 		rc = leicaefi_chip_read(chip->efichip, LEICAEFI_REG_MOD_ERR,
 					&value);
 		if (rc != 0) {
-			dev_err(chip->dev, "%s - IRQ setup failed: %d\n",
+			dev_err(chip->dev,
+				"%s - failed to clear ERR register: %d\n",
 				__func__, rc);
 			return rc;
 		}
@@ -309,7 +317,8 @@ static int leicaefi_irq_chip_init(struct leicaefi_irq_chip *chip)
 		rc = leicaefi_chip_set_bits(chip->efichip, LEICAEFI_REG_MOD_IE,
 					    LEICAEFI_IRQBIT_ERR);
 		if (rc != 0) {
-			dev_err(chip->dev, "%s - IRQ setup failed: %d\n",
+			dev_err(chip->dev,
+				"%s - failed to enable ERR interrupt: %d\n",
 				__func__, rc);
 			return rc;
 		}
@@ -323,7 +332,7 @@ int leicaefi_add_irq_chip(struct device *dev, int irq,
 			  struct leicaefi_irq_chip **irqchip)
 {
 	struct leicaefi_irq_chip *chip = NULL;
-	int error_rv = 0;
+	int rc = 0;
 
 	dev_dbg(dev, "%s\n", __func__);
 
@@ -342,10 +351,10 @@ int leicaefi_add_irq_chip(struct device *dev, int irq,
 	chip->irq = irq;
 	chip->efichip = efichip;
 
-	error_rv = leicaefi_irq_chip_init(chip);
-	if (error_rv != 0) {
+	rc = leicaefi_irq_chip_init(chip);
+	if (rc != 0) {
 		leicaefi_del_irq_chip(chip);
-		return error_rv;
+		return rc;
 	}
 
 	*irqchip = chip;

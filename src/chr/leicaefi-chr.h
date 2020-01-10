@@ -9,6 +9,14 @@
 
 #include <common/leicaefi-device.h>
 
+struct leicaefi_chr_flash {
+	int irq_flash;
+	int irq_flash_error;
+	struct mutex op_lock;
+	atomic_t op_state;
+	wait_queue_head_t op_wq;
+};
+
 struct leicaefi_chr_device {
 	struct platform_device *pdev;
 	struct leicaefi_chip *efichip;
@@ -20,10 +28,18 @@ struct leicaefi_chr_device {
 	bool chr_device_created;
 	struct file_operations chr_file_ops;
 	int chr_major;
+
+	struct leicaefi_chr_flash flash;
 };
 
 long leicaefi_chr_reg_handle_ioctl(struct leicaefi_chr_device *efidev,
 				   unsigned int cmd, unsigned long arg,
 				   bool *handled);
+
+long leicaefi_chr_flash_handle_ioctl(struct leicaefi_chr_device *efidev,
+				     unsigned int cmd, unsigned long arg,
+				     bool *handled);
+
+int leicaefi_chr_flash_init(struct leicaefi_chr_device *efidev);
 
 #endif /*_LINUX_LEICAEFI_CHR_H*/
