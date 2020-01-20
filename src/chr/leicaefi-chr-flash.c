@@ -69,7 +69,8 @@ static int leicaefi_chr_request_set_mode(struct leicaefi_chr_device *efidev,
 	}
 
 	/* keep only mode bit */
-	current_modid_mode_value &= LEICAEFI_MODID_MODE_MASK;
+	current_modid_mode_value &=
+		(LEICAEFI_MODID_MODE_MASK << LEICAEFI_MODID_MODE_SHIFT);
 
 	/* if already in requested mode - return success */
 	if (current_modid_mode_value == target_modid_mode_value) {
@@ -228,6 +229,9 @@ static int leicaefi_chr_flash_request_check_checksum(
 			return rc;
 		}
 
+		dev_info(&efidev->pdev->dev, "%s - flash check success\n",
+			 __func__);
+
 		checksum_data->check_result = CHECK_RESULT_SUCCESS;
 
 		return 0;
@@ -238,6 +242,9 @@ static int leicaefi_chr_flash_request_check_checksum(
 		if (rc) {
 			return rc;
 		}
+
+		dev_info(&efidev->pdev->dev, "%s - flash check failure\n",
+			 __func__);
 
 		checksum_data->check_result = CHECK_RESULT_FAILURE;
 
