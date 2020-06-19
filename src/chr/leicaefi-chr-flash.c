@@ -272,6 +272,30 @@ static int leicaefi_chr_flash_request_read(struct leicaefi_chr_device *efidev,
 }
 
 static int
+leicaefi_chr_iflash_request_read(struct leicaefi_chr_device *efidev,
+				 struct leicaefi_ioctl_flash_rw *data)
+{
+	static const __u16 IFLASH_REG_COUNT = 64;
+
+	if (data->address >= IFLASH_REG_COUNT) {
+		dev_warn(&efidev->pdev->dev,
+			 "%s - invalid register number %d\n", __func__,
+			 (int)data->address);
+		return -EINVAL;
+	}
+
+	if ((leicaefi_chip_write(efidev->efichip, LEICAEFI_REG_IFLASH_ADDR,
+				 data->address) != 0) ||
+	    (leicaefi_chip_read(efidev->efichip, LEICAEFI_REG_IFLASH_DATA,
+				&data->value) != 0)) {
+		dev_warn(&efidev->pdev->dev, "%s - request failed\n", __func__);
+		return -EIO;
+	}
+
+	return 0;
+}
+
+static int
 leicaefi_chr_flash_request_write(struct leicaefi_chr_device *efidev,
 				 const struct leicaefi_ioctl_flash_rw *data)
 {
@@ -601,6 +625,32 @@ static irqreturn_t leicaefi_chr_handle_flash_error_irq(int irq, void *dev_efi)
 	return IRQ_HANDLED;
 }
 
+static long leicaefi_chr_ioctl_iflash_read(struct leicaefi_chr_device *efidev,
+					   unsigned long arg)
+{
+	struct leicaefi_ioctl_flash_rw data;
+	int rc = 0;
+
+	rc = leicaefi_chr_copy_from_user(&data, arg, sizeof(data));
+	if (rc) {
+		return rc;
+	}
+
+	// NOTE: we are using the same lock here
+	rc = leicaefi_chr_flash_exclusive_lock(efidev);
+	if (rc == 0) {
+		rc = leicaefi_chr_iflash_request_read(efidev, &data);
+		if (rc == 0) {
+			rc = leicaefi_chr_copy_to_user(arg, &data,
+						       sizeof(data));
+		}
+
+		leicaefi_chr_flash_exclusive_unlock(efidev);
+	}
+
+	return rc;
+}
+
 long leicaefi_chr_flash_handle_ioctl(struct leicaefi_chr_device *efidev,
 				     unsigned int cmd, unsigned long arg,
 				     bool *handled)
@@ -638,6 +688,10 @@ long leicaefi_chr_flash_handle_ioctl(struct leicaefi_chr_device *efidev,
 		break;
 	case LEICAEFI_IOCTL_GET_MODE:
 		result = leicaefi_chr_ioctl_get_mode(efidev, arg);
+		*handled = true;
+		break;
+	case LEICAEFI_IOCTL_IFLASH_READ:
+		result = leicaefi_chr_ioctl_iflash_read(efidev, arg);
 		*handled = true;
 		break;
 	default:

@@ -104,4 +104,8 @@ struct leicaefi_ioctl_mode {
 	_IOC(_IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 12,                             \
 	     sizeof(struct leicaefi_ioctl_mode))
 
+#define LEICAEFI_IOCTL_IFLASH_READ                                             \
+	_IOC(_IOC_READ | _IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 13,                 \
+	     sizeof(struct leicaefi_ioctl_flash_rw))
+
 #endif /*_LINUX_LEICAEFI_H*/
