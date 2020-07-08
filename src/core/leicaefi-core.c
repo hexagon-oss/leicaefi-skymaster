@@ -36,6 +36,10 @@ static const struct mfd_cell leicaefi_mfd_cells[] = {
 		.resources = leicaefi_chr_resources,
 		.num_resources = ARRAY_SIZE(leicaefi_chr_resources),
 	},
+	{
+		.name = "leica-efi-reboothook",
+		.of_compatible = "leica,efi-reboothook",
+	},
 #if 0 /* MFD child devices, to be enabled by next user stories */
 	{
 		.name = "leica-efi-keys",
