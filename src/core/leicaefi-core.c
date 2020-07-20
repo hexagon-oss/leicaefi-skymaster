@@ -40,6 +40,10 @@ static const struct mfd_cell leicaefi_mfd_cells[] = {
 		.name = "leica-efi-reboothook",
 		.of_compatible = "leica,efi-reboothook",
 	},
+	{
+		.name = "leica-efi-leds",
+		.of_compatible = "leica,efi-leds",
+	},
 #if 0 /* MFD child devices, to be enabled by next user stories */
 	{
 		.name = "leica-efi-keys",
@@ -47,10 +51,6 @@ static const struct mfd_cell leicaefi_mfd_cells[] = {
 		.resources = leicaefi_keys_resources,
 		.num_resources = ARRAY_SIZE(leicaefi_keys_resources),
 	},
-    {
-        .name = "leica-efi-leds",
-        .of_compatible = "leica,efi-leds",
-    },
 #endif
 };
 

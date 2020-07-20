@@ -9,6 +9,7 @@ ccflags-y += -DDEBUG=1
 obj-m += leicaefi-core.o
 obj-m += leicaefi-chr.o
 obj-m += leicaefi-reboothook.o
+obj-m += leicaefi-leds.o
 
 leicaefi-core-y := src/core/leicaefi-core.o
 leicaefi-core-y += src/core/leicaefi-chip.o
@@ -19,3 +20,5 @@ leicaefi-chr-y += src/chr/leicaefi-chr-reg.o
 leicaefi-chr-y += src/chr/leicaefi-chr-flash.o
 
 leicaefi-reboothook-y := src/reboothook/leicaefi-reboothook.o
+
+leicaefi-leds-y := src/leds/leicaefi-leds.o
