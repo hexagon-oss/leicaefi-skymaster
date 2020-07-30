@@ -3,7 +3,7 @@ ccflags-y := -I$(PWD)/include
 ccflags-y += -I$(PWD)/src
 
 # For development purposes - enable debugging/logging functionality
-ccflags-y += -DDEBUG=1
+# ccflags-y += -DDEBUG=1
 
 # Modules
 obj-m += leicaefi-core.o
