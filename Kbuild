@@ -10,6 +10,7 @@ obj-m += leicaefi-core.o
 obj-m += leicaefi-chr.o
 obj-m += leicaefi-reboothook.o
 obj-m += leicaefi-leds.o
+obj-m += leicaefi-keys.o
 
 leicaefi-core-y := src/core/leicaefi-core.o
 leicaefi-core-y += src/core/leicaefi-chip.o
@@ -22,3 +23,5 @@ leicaefi-chr-y += src/chr/leicaefi-chr-flash.o
 leicaefi-reboothook-y := src/reboothook/leicaefi-reboothook.o
 
 leicaefi-leds-y := src/leds/leicaefi-leds.o
+
+leicaefi-keys-y := src/keys/leicaefi-keys.o

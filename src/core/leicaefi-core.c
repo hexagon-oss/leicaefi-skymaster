@@ -23,11 +23,9 @@ static const struct resource leicaefi_chr_resources[] = {
 	DEFINE_RES_IRQ_NAMED(LEICAEFI_IRQNO_ERR_FLASH, "LEICAEFI_FLASH_ERROR"),
 };
 
-#if 0 /* MFD child devices, to be enabled by next user stories */
 static const struct resource leicaefi_keys_resources[] = {
 	DEFINE_RES_IRQ_NAMED(LEICAEFI_IRQNO_KEY, "LEICAEFI_KEY"),
 };
-#endif
 
 static const struct mfd_cell leicaefi_mfd_cells[] = {
 	{
@@ -44,14 +42,12 @@ static const struct mfd_cell leicaefi_mfd_cells[] = {
 		.name = "leica-efi-leds",
 		.of_compatible = "leica,efi-leds",
 	},
-#if 0 /* MFD child devices, to be enabled by next user stories */
 	{
 		.name = "leica-efi-keys",
 		.of_compatible = "leica,efi-keys",
 		.resources = leicaefi_keys_resources,
 		.num_resources = ARRAY_SIZE(leicaefi_keys_resources),
 	},
-#endif
 };
 
 static int leicaefi_i2c_hwcheck(struct i2c_client *i2c)
