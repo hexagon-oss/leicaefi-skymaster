@@ -470,7 +470,7 @@ static int leicaefi_led_bit_pattern_set(struct led_classdev *led_cdev,
 		"%s delay=%lu pattern=%llu pattern_len=%d\n", __func__,
 		step_delay, pattern, pattern_len);
 
-	if ((step_delay != STATE_REFRESH_INTERVAL_MS) && (pattern_len < 1)) {
+	if ((step_delay != STATE_REFRESH_INTERVAL_MS) || (pattern_len < 1)) {
 		dev_warn(&led->efidev->pdev->dev,
 			 "%s - unsupported arguments\n", __func__);
 
