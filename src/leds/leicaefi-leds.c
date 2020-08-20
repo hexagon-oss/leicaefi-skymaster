@@ -59,7 +59,8 @@ struct leicaefi_leds_device {
 #endif /* CONFIG_LEDS_TRIGGER_BITPATTERN */
 };
 
-static const unsigned long STATE_REFRESH_INTERVAL_MS = 250;
+static const unsigned long STATE_REFRESH_INTERVAL_MS =
+	LEICAEFI_LED_SYNC_REFRESH_RATE_MS;
 static const unsigned long MAX_INTERVAL_COUNT =
 	(60 * 1000) / STATE_REFRESH_INTERVAL_MS;
 

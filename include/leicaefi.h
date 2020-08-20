@@ -28,6 +28,9 @@
 /* Software mode: firmware */
 #define LEICAEFI_SOFTWARE_MODE_FIRMWARE ((__u8)2)
 
+/* Synchronized LED state refresh rate */
+#define LEICAEFI_LED_SYNC_REFRESH_RATE_MS (250)
+
 struct leicaefi_ioctl_regrw {
 	__u8 reg_no;
 	__u16 reg_value;
