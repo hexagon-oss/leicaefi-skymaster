@@ -1,11 +1,14 @@
 #include <linux/platform_device.h>
 #include <linux/uaccess.h>
 #include <linux/interrupt.h>
+#include <linux/delay.h>
 
 #include <chr/leicaefi-chr.h>
 #include <leicaefi.h>
 #include <common/leicaefi-chip.h>
 #include <chr/leicaefi-chr-utils.h>
+
+static const unsigned int LEICAEFI_SET_MODE_DELAY_MS = 100;
 
 enum leicaefi_flash_op_state {
 	LEICAEFI_FLASH_OP_IDLE,
@@ -111,6 +114,8 @@ static int leicaefi_chr_request_set_mode(struct leicaefi_chr_device *efidev,
 		if (rc) {
 			return rc;
 		}
+
+		msleep(LEICAEFI_SET_MODE_DELAY_MS);
 
 		return 0;
 	} else if (state_value == LEICAEFI_FLASH_OP_FAILED) {
