@@ -31,6 +31,17 @@
 /* Synchronized LED state refresh rate */
 #define LEICAEFI_LED_SYNC_REFRESH_RATE_MS (250)
 
+/* Power source: unknown source */
+#define LEICAEFI_POWER_SOURCE_UNKOWN_SOURCE ((__u8)0)
+/* Power source: internal battery 1 */
+#define LEICAEFI_POWER_SOURCE_INTERNAL_BATTERY1 ((__u8)1)
+/* Power source: external source 1 */
+#define LEICAEFI_POWER_SOURCE_EXTERNAL_SOURCE1 ((__u8)2)
+/* Power source: external source 2 */
+#define LEICAEFI_POWER_SOURCE_EXTERNAL_SOURCE2 ((__u8)3)
+/* Power source: power over ethernet 1 */
+#define LEICAEFI_POWER_SOURCE_POE_SOURCE1 ((__u8)4)
+
 struct leicaefi_ioctl_regrw {
 	__u8 reg_no;
 	__u16 reg_value;
@@ -63,6 +74,11 @@ struct leicaefi_ioctl_flash_write_enable {
 struct leicaefi_ioctl_mode {
 	/* [set] in: target mode; [get] out: current mode */
 	__u8 mode;
+};
+
+struct leicaefi_ioctl_power_source {
+	/* out: current power source */
+	__u8 power_source;
 };
 
 /* write means user -> write-to -> kernel */
@@ -110,5 +126,9 @@ struct leicaefi_ioctl_mode {
 #define LEICAEFI_IOCTL_IFLASH_READ                                             \
 	_IOC(_IOC_READ | _IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 13,                 \
 	     sizeof(struct leicaefi_ioctl_flash_rw))
+
+#define LEICAEFI_IOCTL_GET_ACTIVE_POWER_SOURCE                                 \
+	_IOC(_IOC_READ, LEICAEFI_IOCTL_MAGIC, 14,                              \
+	     sizeof(struct leicaefi_ioctl_power_source))
 
 #endif /*_LINUX_LEICAEFI_H*/

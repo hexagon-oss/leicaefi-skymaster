@@ -40,6 +40,10 @@ long leicaefi_chr_flash_handle_ioctl(struct leicaefi_chr_device *efidev,
 				     unsigned int cmd, unsigned long arg,
 				     bool *handled);
 
+long leicaefi_chr_power_handle_ioctl(struct leicaefi_chr_device *efidev,
+				     unsigned int cmd, unsigned long arg,
+				     bool *handled);
+
 int leicaefi_chr_flash_init(struct leicaefi_chr_device *efidev);
 
 #endif /*_LINUX_LEICAEFI_CHR_H*/
