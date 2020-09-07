@@ -48,6 +48,10 @@ static const struct mfd_cell leicaefi_mfd_cells[] = {
 		.resources = leicaefi_keys_resources,
 		.num_resources = ARRAY_SIZE(leicaefi_keys_resources),
 	},
+	{
+		.name = "leica-efi-power",
+		.of_compatible = "leica,efi-power",
+	},
 };
 
 static int leicaefi_i2c_hwcheck(struct i2c_client *i2c)
