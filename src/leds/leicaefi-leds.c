@@ -666,8 +666,6 @@ static int leicaefi_leds_remove(struct platform_device *pdev)
 
 	/* unregister leds */
 	for (i = 0; i < EFI_LED_COUNT; i++) {
-		int ret = 0;
-
 		devm_led_classdev_unregister(&efidev->pdev->dev,
 					     &efidev->leds[i].lc);
 	}

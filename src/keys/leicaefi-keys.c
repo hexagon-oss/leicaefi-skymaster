@@ -142,7 +142,7 @@ static int leicaefi_keys_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static int leicaefi_leds_remove(struct platform_device *pdev)
+static int leicaefi_keys_remove(struct platform_device *pdev)
 {
 	struct leicaefi_keys_device *efidev = platform_get_drvdata(pdev);
 
@@ -151,25 +151,25 @@ static int leicaefi_leds_remove(struct platform_device *pdev)
 	return 0;
 }
 
-static const struct of_device_id leicaefi_leds_of_id_table[] = {
+static const struct of_device_id leicaefi_keys_of_id_table[] = {
 	{
 		.compatible = "leica,efi-keys",
 	},
 	{},
 };
-MODULE_DEVICE_TABLE(of, leicaefi_leds_of_id_table);
+MODULE_DEVICE_TABLE(of, leicaefi_keys_of_id_table);
 
-static struct platform_driver leicaefi_leds_driver = {
+static struct platform_driver leicaefi_keys_driver = {
     .driver =
         {
             .name = "leica-efi-keys",
-            .of_match_table = leicaefi_leds_of_id_table,
+            .of_match_table = leicaefi_keys_of_id_table,
         },
     .probe = leicaefi_keys_probe,
-    .remove = leicaefi_leds_remove,
+    .remove = leicaefi_keys_remove,
 };
 
-module_platform_driver(leicaefi_leds_driver);
+module_platform_driver(leicaefi_keys_driver);
 
 // Module information
 MODULE_DESCRIPTION("Leica EFI keys driver");
