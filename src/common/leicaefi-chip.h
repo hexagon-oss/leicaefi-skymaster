@@ -18,4 +18,7 @@ int leicaefi_chip_write(struct leicaefi_chip *efichip, u8 reg_no, u16 value);
 int leicaefi_chip_read(struct leicaefi_chip *efichip, u8 reg_no,
 		       u16 *value_ptr);
 
+int leicaefi_chip_gencmd(struct leicaefi_chip *efichip, u16 cmd, u16 input_data,
+			 u16 *output_data_ptr);
+
 #endif /*_LINUX_LEICAEFI_UTILS_H*/

@@ -14,6 +14,7 @@ leicaefi_charger_property_is_writeable(struct power_supply *psy,
 
 static enum power_supply_property leicaefi_charger_properties[] = {
 	POWER_SUPPLY_PROP_PRESENT,
+	POWER_SUPPLY_PROP_VOLTAGE_NOW,
 };
 
 static char *leicaefi_battery_names[] = { LEICAEFI_POWER_SUPPLY_NAME_BAT1 };
@@ -29,6 +30,7 @@ static const struct leicaefi_charger_desc leicaefi_ext1_psy_desc = {
         .property_is_writeable = leicaefi_charger_property_is_writeable,
     },
     .validity_bit = LEICAEFI_POWERSRCBIT_EXT1VAL,
+    .voltage_register = LEICAEFI_REG_PWR_VEXT1,
 };
 
 static const struct leicaefi_charger_desc leicaefi_ext2_psy_desc = {
@@ -42,6 +44,7 @@ static const struct leicaefi_charger_desc leicaefi_ext2_psy_desc = {
         .property_is_writeable = leicaefi_charger_property_is_writeable,
     },
     .validity_bit = LEICAEFI_POWERSRCBIT_EXT2VAL,
+    .voltage_register = LEICAEFI_REG_PWR_VEXT2,
 };
 
 static const struct leicaefi_charger_desc leicaefi_poe1_psy_desc = {
@@ -55,6 +58,7 @@ static const struct leicaefi_charger_desc leicaefi_poe1_psy_desc = {
         .property_is_writeable = leicaefi_charger_property_is_writeable,
     },
     .validity_bit = LEICAEFI_POWERSRCBIT_POE1VAL,
+    .voltage_register = LEICAEFI_REG_PWR_VPOE1,
 };
 
 static int leicaefi_charger_is_present(struct leicaefi_charger *charger,
@@ -62,11 +66,41 @@ static int leicaefi_charger_is_present(struct leicaefi_charger *charger,
 {
 	u16 reg_value = 0;
 
-	REMOVEME_dump_registers(charger->efidev);
-
 	int rv = leicaefi_chip_read(charger->efidev->efichip,
 				    LEICAEFI_REG_PWR_SRC_STATUS, &reg_value);
 	*val = (reg_value & charger->desc->validity_bit) ? 1 : 0;
+
+	dev_dbg(&charger->supply->dev, "%s value=%d rv=%d\n", __func__, *val,
+		rv);
+
+	return rv;
+}
+
+static int leicaefi_charger_get_voltage(struct leicaefi_charger *charger,
+					int *val)
+{
+	u16 reg_value = 0;
+	int value = 0;
+
+	int rv =
+		leicaefi_chip_read(charger->efidev->efichip,
+				   charger->desc->voltage_register, &reg_value);
+
+	static const int ADC_RESOLUTION = 0x03FF; // 10 bit
+
+	static const int ADC_VREF = 2500;
+	static const int ADC_DIVIDER_R1 = 104700;
+	static const int ADC_DIVIDER_R2 = 10000;
+	static const int ADC_MAX = ADC_RESOLUTION;
+	static const int ADC_VREF_COMP =
+		(ADC_VREF * (ADC_DIVIDER_R1 + ADC_DIVIDER_R2) / ADC_DIVIDER_R2);
+
+	value = (reg_value & ADC_RESOLUTION);
+	value *= ADC_VREF_COMP;
+	value /= ADC_MAX;
+	value *= 1000;
+
+	*val = value;
 
 	dev_dbg(&charger->supply->dev, "%s value=%d rv=%d\n", __func__, *val,
 		rv);
@@ -85,6 +119,8 @@ static int leicaefi_charger_get_property(struct power_supply *psy,
 	switch (psp) {
 	case POWER_SUPPLY_PROP_PRESENT:
 		return leicaefi_charger_is_present(charger, &val->intval);
+	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+		return leicaefi_charger_get_voltage(charger, &val->intval);
 	default:
 		break;
 	}

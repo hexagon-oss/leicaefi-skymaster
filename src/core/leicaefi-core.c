@@ -249,6 +249,12 @@ static int leicaefi_i2c_probe(struct i2c_client *i2c)
 		return ret;
 	}
 
+	ret = leicaefi_chip_init(efidev->efichip, efidev->irq_chip);
+	if (ret) {
+		dev_err(efidev->dev, "Failed to init EFI chip: %d\n", ret);
+		return ret;
+	}
+
 	ret = leicaefi_add_mfd_devices(efidev);
 	if (ret) {
 		dev_err(efidev->dev, "Failed to add mfd devices: %d\n", ret);

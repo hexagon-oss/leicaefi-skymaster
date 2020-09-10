@@ -10,7 +10,7 @@
 #include <common/leicaefi-device.h>
 
 struct leicaefi_chr_flash {
-	int irq_flash;
+	int irq_flash_complete;
 	int irq_flash_error;
 	struct mutex op_lock;
 	atomic_t op_state;

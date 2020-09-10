@@ -15,6 +15,14 @@ leicaefi_battery_property_is_writeable(struct power_supply *psy,
 static enum power_supply_property leicaefi_power_battery_properties[] = {
 	POWER_SUPPLY_PROP_PRESENT,
 	POWER_SUPPLY_PROP_CAPACITY,
+	POWER_SUPPLY_PROP_TIME_TO_EMPTY_NOW,
+	POWER_SUPPLY_PROP_TIME_TO_EMPTY_AVG,
+	POWER_SUPPLY_PROP_TIME_TO_FULL_AVG,
+	POWER_SUPPLY_PROP_CURRENT_NOW,
+	POWER_SUPPLY_PROP_CURRENT_AVG,
+	POWER_SUPPLY_PROP_VOLTAGE_NOW,
+	POWER_SUPPLY_PROP_TEMP,
+	POWER_SUPPLY_PROP_CYCLE_COUNT,
 };
 
 static const struct leicaefi_battery_desc leicaefi_bat1_psy_desc = {
@@ -34,8 +42,6 @@ static int leicaefi_battery_is_present(struct leicaefi_battery *battery,
 				       int *val)
 {
 	u16 reg_value = 0;
-
-	REMOVEME_dump_registers(battery->efidev);
 
 	int rv = leicaefi_chip_read(battery->efidev->efichip,
 				    LEICAEFI_REG_PWR_SRC_STATUS, &reg_value);
@@ -62,6 +68,99 @@ static int leicaefi_battery_get_capacity(struct leicaefi_battery *battery,
 	return rv;
 }
 
+static int leicaefi_battery_read_msg(struct leicaefi_battery *battery, u8 cmd,
+				     int *val)
+{
+	u16 reg_value = 0;
+
+	int rv = leicaefi_chip_gencmd(battery->efidev->efichip,
+				      LEICAEFI_CMD_BATTERY1_READMSG_MASK | cmd,
+				      0, &reg_value);
+
+	*val = reg_value;
+
+	dev_dbg(&battery->supply->dev, "%s cmd=%d value=%d rv=%d\n", __func__,
+		(int)cmd, *val, rv);
+
+	return rv;
+}
+
+static int leicaefi_battery_read_time_min(struct leicaefi_battery *battery,
+					  u8 cmd, int *val)
+{
+	int rv = leicaefi_battery_read_msg(battery, cmd, val);
+	*val *= 60; // min to sec
+	return rv;
+}
+
+static int leicaefi_battery_read_micro_unit(struct leicaefi_battery *battery,
+					    u8 cmd, int *val)
+{
+	int rv = leicaefi_battery_read_msg(battery, cmd, val);
+	*val *= 1000; // milli to micro
+	return rv;
+}
+
+static int
+leicaefi_battery_get_time_to_empty_now(struct leicaefi_battery *battery,
+				       int *val)
+{
+	return leicaefi_battery_read_time_min(
+		battery, LEICAEFI_BAT_MSG_RUN_TIME_TO_EMPTY, val);
+}
+
+static int
+leicaefi_battery_get_time_to_empty_avg(struct leicaefi_battery *battery,
+				       int *val)
+{
+	return leicaefi_battery_read_time_min(
+		battery, LEICAEFI_BAT_MSG_AVERAGE_TIME_TO_EMPTY, val);
+}
+
+static int
+leicaefi_battery_get_time_to_full_avg(struct leicaefi_battery *battery,
+				      int *val)
+{
+	return leicaefi_battery_read_time_min(
+		battery, LEICAEFI_BAT_MSG_AVERAGE_TIME_TO_FULL, val);
+}
+
+static int leicaefi_battery_get_current_now(struct leicaefi_battery *battery,
+					    int *val)
+{
+	return leicaefi_battery_read_micro_unit(battery,
+						LEICAEFI_BAT_MSG_CURRENT, val);
+}
+
+static int leicaefi_battery_get_current_avg(struct leicaefi_battery *battery,
+					    int *val)
+{
+	return leicaefi_battery_read_micro_unit(
+		battery, LEICAEFI_BAT_MSG_AVERAGE_CURRENT, val);
+}
+
+static int leicaefi_battery_get_voltage_now(struct leicaefi_battery *battery,
+					    int *val)
+{
+	return leicaefi_battery_read_micro_unit(battery,
+						LEICAEFI_BAT_MSG_VOLTAGE, val);
+}
+
+static int leicaefi_battery_get_temp(struct leicaefi_battery *battery, int *val)
+{
+	int rv = leicaefi_battery_read_msg(battery,
+					   LEICAEFI_BAT_MSG_TEMPERATURE, val);
+	*val -= 2731; // 0.1K to 0.1C
+	return rv;
+}
+
+static int leicaefi_battery_get_cycle_count(struct leicaefi_battery *battery,
+					    int *val)
+{
+	return leicaefi_battery_read_msg(battery, LEICAEFI_BAT_MSG_CYCLE_COUNT,
+					 val);
+}
+
 static int leicaefi_battery_get_property(struct power_supply *psy,
 					 enum power_supply_property psp,
 					 union power_supply_propval *val)
@@ -75,6 +174,25 @@ static int leicaefi_battery_get_property(struct power_supply *psy,
 		return leicaefi_battery_is_present(battery, &val->intval);
 	case POWER_SUPPLY_PROP_CAPACITY:
 		return leicaefi_battery_get_capacity(battery, &val->intval);
+	case POWER_SUPPLY_PROP_TIME_TO_EMPTY_NOW:
+		return leicaefi_battery_get_time_to_empty_now(battery,
+							      &val->intval);
+	case POWER_SUPPLY_PROP_TIME_TO_EMPTY_AVG:
+		return leicaefi_battery_get_time_to_empty_avg(battery,
+							      &val->intval);
+	case POWER_SUPPLY_PROP_TIME_TO_FULL_AVG:
+		return leicaefi_battery_get_time_to_full_avg(battery,
+							     &val->intval);
+	case POWER_SUPPLY_PROP_CURRENT_NOW:
+		return leicaefi_battery_get_current_now(battery, &val->intval);
+	case POWER_SUPPLY_PROP_CURRENT_AVG:
+		return leicaefi_battery_get_current_avg(battery, &val->intval);
+	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+		return leicaefi_battery_get_voltage_now(battery, &val->intval);
+	case POWER_SUPPLY_PROP_TEMP:
+		return leicaefi_battery_get_temp(battery, &val->intval);
+	case POWER_SUPPLY_PROP_CYCLE_COUNT:
+		return leicaefi_battery_get_cycle_count(battery, &val->intval);
 	default:
 		break;
 	}

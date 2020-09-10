@@ -131,7 +131,7 @@ static int leicaefi_keys_probe(struct platform_device *pdev)
 
 	rv = devm_request_threaded_irq(&efidev->pdev->dev, efidev->irq, NULL,
 				       leicaefi_keys_irq_handler, IRQF_ONESHOT,
-				       pdev->name, efidev);
+				       NULL, efidev);
 	if (rv < 0) {
 		dev_err(&efidev->pdev->dev,
 			"failed: irq request (IRQ: %d, error :%d)\n",

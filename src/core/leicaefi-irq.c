@@ -27,6 +27,16 @@ static struct leicaefi_irq_descriptor leicaefi_irq_descriptors[LEICAEFI_TOTAL_IR
         .is_error = false,
         .reg_mask = LEICAEFI_IRQBIT_KEY,
     },
+    [LEICAEFI_IRQNO_GENCMD_COMPLETE] =
+    {
+        .is_error = false,
+        .reg_mask = LEICAEFI_IRQBIT_GCC,
+    },
+    [LEICAEFI_IRQNO_GENCMD_ERROR] =
+    {
+        .is_error = true,
+        .reg_mask = LEICAEFI_IRQBIT_GCC,
+    },
 };
 
 struct leicaefi_irq_chip {
@@ -258,7 +268,8 @@ static int leicaefi_irq_chip_init(struct leicaefi_irq_chip *chip)
 {
 	int rc = 0;
 
-	dev_dbg(chip->dev, "%s\n", __func__);
+	dev_dbg(chip->dev, "%s - Registering %d interrupts\n", __func__,
+		LEICAEFI_TOTAL_IRQ_COUNT);
 
 	mutex_init(&chip->lock);
 

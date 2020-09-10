@@ -600,7 +600,8 @@ static long leicaefi_chr_ioctl_get_mode(struct leicaefi_chr_device *efidev,
 	return rc;
 }
 
-static irqreturn_t leicaefi_chr_handle_flash_irq(int irq, void *dev_efi)
+static irqreturn_t leicaefi_chr_handle_flash_complete_irq(int irq,
+							  void *dev_efi)
 {
 	struct leicaefi_chr_device *efidev =
 		(struct leicaefi_chr_device *)dev_efi;
@@ -722,8 +723,8 @@ int leicaefi_chr_flash_init_irq(struct leicaefi_chr_device *efidev,
 	}
 
 	rc = devm_request_threaded_irq(&efidev->pdev->dev, *irq_ptr, NULL,
-				       handler_func, IRQF_ONESHOT,
-				       efidev->pdev->name, efidev);
+				       handler_func, IRQF_ONESHOT, NULL,
+				       efidev);
 	if (rc) {
 		dev_err(&efidev->pdev->dev,
 			"%s - failed: irq request (IRQ: %s/%d, error :%d)\n",
@@ -742,9 +743,9 @@ int leicaefi_chr_flash_init(struct leicaefi_chr_device *efidev)
 	atomic_set(&efidev->flash.op_state, LEICAEFI_FLASH_OP_IDLE);
 	init_waitqueue_head(&efidev->flash.op_wq);
 
-	rc = leicaefi_chr_flash_init_irq(efidev, &efidev->flash.irq_flash,
-					 "LEICAEFI_FLASH",
-					 leicaefi_chr_handle_flash_irq);
+	rc = leicaefi_chr_flash_init_irq(
+		efidev, &efidev->flash.irq_flash_complete, "LEICAEFI_FLASH",
+		leicaefi_chr_handle_flash_complete_irq);
 	if (rc) {
 		return rc;
 	}

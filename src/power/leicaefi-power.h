@@ -18,6 +18,7 @@ struct leicaefi_power_device;
 struct leicaefi_charger_desc {
 	const struct power_supply_desc kernel_desc;
 	u8 validity_bit;
+	u8 voltage_register;
 };
 
 struct leicaefi_battery_desc {
@@ -54,7 +55,5 @@ int leicaefi_power_init_ext2(struct leicaefi_power_device *efidev);
 int leicaefi_power_init_poe1(struct leicaefi_power_device *efidev);
 
 int leicaefi_power_init_bat1(struct leicaefi_power_device *efidev);
-
-void REMOVEME_dump_registers(struct leicaefi_power_device *efidev);
 
 #endif /*_LINUX_LEICAEFI_POWER_H*/

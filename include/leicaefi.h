@@ -22,6 +22,8 @@
 #define LEICAEFI_EBADMODE (LEICAEFI_ERRNO_BASE + 2)
 /* Error - Requested operation failed */
 #define LEICAEFI_EOPFAIL (LEICAEFI_ERRNO_BASE + 3)
+/* Error - Generic command operation failed */
+#define LEICAEFI_EGENCMDFAIL (LEICAEFI_ERRNO_BASE + 4)
 
 /* Software mode: loader */
 #define LEICAEFI_SOFTWARE_MODE_LOADER ((__u8)1)
