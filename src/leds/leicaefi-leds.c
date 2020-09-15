@@ -438,7 +438,8 @@ static int leicaefi_leds_thread_loop(void *data)
 	while (!kthread_should_stop()) {
 		mutex_lock(&efidev->lock);
 
-		dev_dbg(&efidev->pdev->dev, "%s - working\n", __func__);
+		// left for debugging purposes
+		// dev_dbg(&efidev->pdev->dev, "%s - working\n", __func__);
 
 		leicaefi_led_update_blink_state_unlocked(efidev);
 

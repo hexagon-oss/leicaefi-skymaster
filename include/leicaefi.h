@@ -83,6 +83,11 @@ struct leicaefi_ioctl_power_source {
 	__u8 power_source;
 };
 
+struct leicaefi_ioctl_led_test_mode_enable {
+	/* in: zero to disable, non-zero to enable led test mode */
+	__u8 enable;
+};
+
 /* write means user -> write-to -> kernel */
 #define LEICAEFI_IOCTL_MAGIC 0xDF
 
@@ -132,5 +137,9 @@ struct leicaefi_ioctl_power_source {
 #define LEICAEFI_IOCTL_GET_ACTIVE_POWER_SOURCE                                 \
 	_IOC(_IOC_READ, LEICAEFI_IOCTL_MAGIC, 14,                              \
 	     sizeof(struct leicaefi_ioctl_power_source))
+
+#define LEICAEFI_IOCTL_LED_SET_TEST_MODE                                       \
+	_IOC(_IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 15,                             \
+	     sizeof(struct leicaefi_ioctl_led_test_mode_enable))
 
 #endif /*_LINUX_LEICAEFI_H*/
