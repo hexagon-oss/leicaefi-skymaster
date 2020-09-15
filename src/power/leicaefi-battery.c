@@ -150,7 +150,7 @@ static int leicaefi_battery_get_temp(struct leicaefi_battery *battery, int *val)
 {
 	int rv = leicaefi_battery_read_msg(battery,
 					   LEICAEFI_BAT_MSG_TEMPERATURE, val);
-	*val -= 2731; // 0.1K to 0.1C
+	*val -= 2732; // 0.1K to 0.1C (273.15 changed to tenths)
 	return rv;
 }
 
