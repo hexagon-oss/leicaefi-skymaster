@@ -72,12 +72,27 @@ static int leicaefi_battery_read_msg(struct leicaefi_battery *battery, u8 cmd,
 				     int *val)
 {
 	u16 reg_value = 0;
+	int rv = 0;
 
-	int rv = leicaefi_chip_gencmd(battery->efidev->efichip,
-				      LEICAEFI_CMD_BATTERY1_READMSG_MASK | cmd,
-				      0, &reg_value);
+	*val = 0;
 
-	*val = reg_value;
+	// check if battery is present, if not do not send message as it may
+	// hang forever
+	rv = leicaefi_chip_read(battery->efidev->efichip,
+				LEICAEFI_REG_PWR_STATUS, &reg_value);
+	if (rv == 0) {
+		if ((reg_value & LEICAEFI_POWERSRCBIT_BAT1VAL) != 0) {
+			rv = leicaefi_chip_gencmd(
+				battery->efidev->efichip,
+				LEICAEFI_CMD_BATTERY1_READMSG_MASK | cmd, 0,
+				&reg_value);
+			if (rv == 0) {
+				*val = reg_value;
+			}
+		} else {
+			rv = -EIO;
+		}
+	}
 
 	dev_dbg(&battery->supply->dev, "%s cmd=%d value=%d rv=%d\n", __func__,
 		(int)cmd, *val, rv);
