@@ -231,10 +231,6 @@ leicaefi_led_update_blink_state_unlocked(struct leicaefi_leds_device *efidev)
 	u16 reg_mask_1 = 0;
 	u16 reg_mask_2 = 0;
 
-	/* TODO: synchronize all LEDs together (so for same parameters they
-	 * would blink at the same time and not shifted / doing this would
-	 * probably require limiting the allowed delays to just a few values */
-
 	for (i = 0; i < EFI_LED_COUNT; i++) {
 		struct leicaefi_led *led = &efidev->leds[i];
 
