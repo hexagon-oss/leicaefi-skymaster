@@ -19,13 +19,24 @@ leicaefi_chr_ioctl_led_set_test_mode(struct leicaefi_chr_device *efidev,
 	}
 
 	rv = leicaefi_chip_gencmd(efidev->efichip,
-				  LEICAEFI_CMD_LED_TEST_MODE_WRITE,
+				  LEICAEFI_CMD_LED_TEST_MODE_WRITE |
+					  0x0000, // led 0
 				  data.enable ? 1 : 0, NULL);
 	if (rv != 0) {
 		dev_warn(&efidev->pdev->dev,
-			 "%s - setting led test mode failed rv=%d\n", __func__,
-			 rv);
-		return -EINVAL;
+			 "%s - setting led 0 test mode failed rv=%d\n",
+			 __func__, rv);
+		return rv;
+	}
+
+	rv = leicaefi_chip_gencmd(efidev->efichip,
+				  LEICAEFI_CMD_LED_TEST_MODE_WRITE | 0x0001,
+				  data.enable ? 1 : 0, NULL);
+	if (rv != 0) {
+		dev_warn(&efidev->pdev->dev,
+			 "%s - setting led 1 test mode failed rv=%d\n",
+			 __func__, rv);
+		return rv;
 	}
 
 	return rv;
