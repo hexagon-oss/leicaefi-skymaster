@@ -69,50 +69,67 @@ static int leicaefi_battery_get_capacity(struct leicaefi_battery *battery,
 }
 
 static int leicaefi_battery_read_msg(struct leicaefi_battery *battery, u8 cmd,
-				     int *val)
+				     int *val, int default_value)
 {
 	u16 reg_value = 0;
 	int rv = 0;
+	int exists = 0;
 
-	*val = 0;
+	*val = default_value;
 
-	// check if battery is present, if not do not send message as it may
-	// hang forever
-	rv = leicaefi_chip_read(battery->efidev->efichip,
-				LEICAEFI_REG_PWR_STATUS, &reg_value);
-	if (rv == 0) {
-		if ((reg_value & LEICAEFI_POWERSRCBIT_BAT1VAL) != 0) {
-			rv = leicaefi_chip_gencmd(
-				battery->efidev->efichip,
-				LEICAEFI_CMD_BATTERY1_READMSG_MASK | cmd, 0,
-				&reg_value);
-			if (rv == 0) {
-				*val = reg_value;
-			}
-		} else {
-			rv = -EIO;
-		}
+	// check if battery is present, if not do not send message as it may hang forever
+	rv = leicaefi_battery_is_present(battery, &exists);
+	if (rv != 0) {
+		dev_warn(
+			&battery->supply->dev,
+			"%s cmd %d, failed to get battery presence, error %d\n",
+			__func__, (int)cmd, rv);
+		return rv;
+	}
+	if (!exists) {
+		dev_dbg(&battery->supply->dev,
+			"%s cmd=%d, battery not present, default value=%d\n",
+			__func__, (int)cmd, *val);
+
+		return 0;
 	}
 
-	dev_dbg(&battery->supply->dev, "%s cmd=%d value=%d rv=%d\n", __func__,
-		(int)cmd, *val, rv);
+	rv = leicaefi_chip_gencmd(battery->efidev->efichip,
+				  LEICAEFI_CMD_BATTERY1_READMSG_MASK | cmd, 0,
+				  &reg_value);
+	if (rv != 0) {
+		dev_warn(
+			&battery->supply->dev,
+			"%s cmd %d, failed to execute battery command, error %d\n",
+			__func__, (int)cmd, rv);
+		return rv;
+	}
 
-	return rv;
+	*val = reg_value;
+
+	dev_dbg(&battery->supply->dev, "%s cmd=%d, success, value=%d\n",
+		__func__, (int)cmd, *val);
+
+	return 0;
 }
 
 static int leicaefi_battery_read_time_min(struct leicaefi_battery *battery,
-					  u8 cmd, int *val)
+					  u8 cmd, int *val, int default_value)
 {
-	int rv = leicaefi_battery_read_msg(battery, cmd, val);
-	*val *= 60; // min to sec
+	int rv = leicaefi_battery_read_msg(battery, cmd, val, default_value);
+	if (rv == 0) {
+		*val *= 60; // min to sec
+	}
 	return rv;
 }
 
 static int leicaefi_battery_read_micro_unit(struct leicaefi_battery *battery,
-					    u8 cmd, int *val)
+					    u8 cmd, int *val, int default_value)
 {
-	int rv = leicaefi_battery_read_msg(battery, cmd, val);
-	*val *= 1000; // milli to micro
+	int rv = leicaefi_battery_read_msg(battery, cmd, val, default_value);
+	if (rv == 0) {
+		*val *= 1000; // milli to micro
+	}
 	return rv;
 }
 
@@ -121,7 +138,7 @@ leicaefi_battery_get_time_to_empty_now(struct leicaefi_battery *battery,
 				       int *val)
 {
 	return leicaefi_battery_read_time_min(
-		battery, LEICAEFI_BAT_MSG_RUN_TIME_TO_EMPTY, val);
+		battery, LEICAEFI_BAT_MSG_RUN_TIME_TO_EMPTY, val, 0);
 }
 
 static int
@@ -129,7 +146,7 @@ leicaefi_battery_get_time_to_empty_avg(struct leicaefi_battery *battery,
 				       int *val)
 {
 	return leicaefi_battery_read_time_min(
-		battery, LEICAEFI_BAT_MSG_AVERAGE_TIME_TO_EMPTY, val);
+		battery, LEICAEFI_BAT_MSG_AVERAGE_TIME_TO_EMPTY, val, 0);
 }
 
 static int
@@ -137,35 +154,37 @@ leicaefi_battery_get_time_to_full_avg(struct leicaefi_battery *battery,
 				      int *val)
 {
 	return leicaefi_battery_read_time_min(
-		battery, LEICAEFI_BAT_MSG_AVERAGE_TIME_TO_FULL, val);
+		battery, LEICAEFI_BAT_MSG_AVERAGE_TIME_TO_FULL, val, 0);
 }
 
 static int leicaefi_battery_get_current_now(struct leicaefi_battery *battery,
 					    int *val)
 {
-	return leicaefi_battery_read_micro_unit(battery,
-						LEICAEFI_BAT_MSG_CURRENT, val);
+	return leicaefi_battery_read_micro_unit(
+		battery, LEICAEFI_BAT_MSG_CURRENT, val, 0);
 }
 
 static int leicaefi_battery_get_current_avg(struct leicaefi_battery *battery,
 					    int *val)
 {
 	return leicaefi_battery_read_micro_unit(
-		battery, LEICAEFI_BAT_MSG_AVERAGE_CURRENT, val);
+		battery, LEICAEFI_BAT_MSG_AVERAGE_CURRENT, val, 0);
 }
 
 static int leicaefi_battery_get_voltage_now(struct leicaefi_battery *battery,
 					    int *val)
 {
-	return leicaefi_battery_read_micro_unit(battery,
-						LEICAEFI_BAT_MSG_VOLTAGE, val);
+	return leicaefi_battery_read_micro_unit(
+		battery, LEICAEFI_BAT_MSG_VOLTAGE, val, 0);
 }
 
 static int leicaefi_battery_get_temp(struct leicaefi_battery *battery, int *val)
 {
-	int rv = leicaefi_battery_read_msg(battery,
-					   LEICAEFI_BAT_MSG_TEMPERATURE, val);
-	*val -= 2732; // 0.1K to 0.1C (273.15 changed to tenths)
+	int rv = leicaefi_battery_read_msg(
+		battery, LEICAEFI_BAT_MSG_TEMPERATURE, val, 0);
+	if (rv == 0) {
+		*val -= 2732; // 0.1K to 0.1C (273.15 changed to tenths)
+	}
 	return rv;
 }
 
@@ -173,7 +192,7 @@ static int leicaefi_battery_get_cycle_count(struct leicaefi_battery *battery,
 					    int *val)
 {
 	return leicaefi_battery_read_msg(battery, LEICAEFI_BAT_MSG_CYCLE_COUNT,
-					 val);
+					 val, 0);
 }
 
 static int leicaefi_battery_get_property(struct power_supply *psy,
