@@ -76,6 +76,11 @@ static long leicaefi_chr_unlocked_ioctl(struct file *filep, unsigned int cmd,
 		return result;
 	}
 
+	result = leicaefi_chr_onewire_handle_ioctl(efidev, cmd, arg, &handled);
+	if (handled) {
+		return result;
+	}
+
 	dev_warn(&efidev->pdev->dev, "%s - IOCTL call %u not handled", __func__,
 		 cmd);
 

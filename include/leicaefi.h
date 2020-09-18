@@ -44,6 +44,17 @@
 /* Power source: power over ethernet 1 */
 #define LEICAEFI_POWER_SOURCE_POE_SOURCE1 ((__u8)4)
 
+/* One wire: power 1 port */
+#define LEICAEFI_ONEWIRE_PORT_PWR1 ((__u8)0)
+/* One wire: power 2 port */
+#define LEICAEFI_ONEWIRE_PORT_PWR2 ((__u8)1)
+/* One wire: com 1 port */
+#define LEICAEFI_ONEWIRE_PORT_COM1 ((__u8)2)
+/* One wire: com 2 port */
+#define LEICAEFI_ONEWIRE_PORT_COM2 ((__u8)3)
+/* One wire: com 3 port */
+#define LEICAEFI_ONEWIRE_PORT_COM3 ((__u8)4)
+
 struct leicaefi_ioctl_regrw {
 	__u8 reg_no;
 	__u16 reg_value;
@@ -86,6 +97,15 @@ struct leicaefi_ioctl_power_source {
 struct leicaefi_ioctl_led_test_mode_enable {
 	/* in: zero to disable, non-zero to enable led test mode */
 	__u8 enable;
+};
+
+struct leicaefi_ioctl_onewire_device {
+	/* in: communication port */
+	__u8 port;
+	/*  out: device id */
+	__u8 id;
+	/*  out: device family code */
+	__u8 familyCode;
 };
 
 /* write means user -> write-to -> kernel */
@@ -141,5 +161,9 @@ struct leicaefi_ioctl_led_test_mode_enable {
 #define LEICAEFI_IOCTL_LED_SET_TEST_MODE                                       \
 	_IOC(_IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 15,                             \
 	     sizeof(struct leicaefi_ioctl_led_test_mode_enable))
+
+#define LEICAEFI_IOCTL_ONE_WIRE_DEVICE_INFO                                    \
+	_IOC(_IOC_READ | _IOC_WRITE, LEICAEFI_IOCTL_MAGIC, 16,                 \
+	     sizeof(struct leicaefi_ioctl_onewire_device))
 
 #endif /*_LINUX_LEICAEFI_H*/

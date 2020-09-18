@@ -22,6 +22,7 @@ leicaefi-chr-y += src/chr/leicaefi-chr-reg.o
 leicaefi-chr-y += src/chr/leicaefi-chr-flash.o
 leicaefi-chr-y += src/chr/leicaefi-chr-power.o
 leicaefi-chr-y += src/chr/leicaefi-chr-led.o
+leicaefi-chr-y += src/chr/leicaefi-chr-onewire.o
 
 leicaefi-reboothook-y := src/reboothook/leicaefi-reboothook.o
 
