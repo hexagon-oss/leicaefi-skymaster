@@ -24,7 +24,7 @@ static int leicaefi_chr_ioctl_read_onewire_register(
 		(int)value);
 
 	data->id = (u8)(value & 0x00FF);
-	data->familyCode = (u8)((value >> 8) & 0x00FF);
+	data->family_code = (u8)((value >> 8) & 0x00FF);
 
 	return rv;
 }
@@ -59,14 +59,6 @@ leicaefi_chr_ioctl_get_onewire_device_info(struct leicaefi_chr_device *efidev,
 			    efidev, LEICAEFI_REG_COM_3_ID, &data)) {
 			return -EINVAL;
 		}
-		break;
-	case LEICAEFI_ONEWIRE_PORT_PWR1:
-	case LEICAEFI_ONEWIRE_PORT_PWR2:
-		// TODO: CRA:	Implement missing port handling
-		dev_warn(
-			&efidev->pdev->dev,
-			"%s - device info for this port currently not implemented\n",
-			__func__);
 		break;
 	default:
 		dev_warn(&efidev->pdev->dev, "%s - port number unknown: %d\n",

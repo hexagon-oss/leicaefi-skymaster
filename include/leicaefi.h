@@ -44,16 +44,12 @@
 /* Power source: power over ethernet 1 */
 #define LEICAEFI_POWER_SOURCE_POE_SOURCE1 ((__u8)4)
 
-/* One wire: power 1 port */
-#define LEICAEFI_ONEWIRE_PORT_PWR1 ((__u8)0)
-/* One wire: power 2 port */
-#define LEICAEFI_ONEWIRE_PORT_PWR2 ((__u8)1)
 /* One wire: com 1 port */
-#define LEICAEFI_ONEWIRE_PORT_COM1 ((__u8)2)
+#define LEICAEFI_ONEWIRE_PORT_COM1 ((__u8)0)
 /* One wire: com 2 port */
-#define LEICAEFI_ONEWIRE_PORT_COM2 ((__u8)3)
+#define LEICAEFI_ONEWIRE_PORT_COM2 ((__u8)1)
 /* One wire: com 3 port */
-#define LEICAEFI_ONEWIRE_PORT_COM3 ((__u8)4)
+#define LEICAEFI_ONEWIRE_PORT_COM3 ((__u8)2)
 
 struct leicaefi_ioctl_regrw {
 	__u8 reg_no;
@@ -105,7 +101,7 @@ struct leicaefi_ioctl_onewire_device {
 	/*  out: device id */
 	__u8 id;
 	/*  out: device family code */
-	__u8 familyCode;
+	__u8 family_code;
 };
 
 /* write means user -> write-to -> kernel */
